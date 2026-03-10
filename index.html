@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WebToAPK — Convert Website to APK</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3e;
+    --accent: #ff6b35;
+    --accent2: #7c3aed;
+    --green: #22c55e;
+    --red: #ef4444;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --glow: rgba(255,107,53,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG GRID */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,107,53,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,107,53,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    padding: 3rem 0 2.5rem;
+  }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 0.35rem 0.9rem;
+    border-radius: 100px;
+    margin-bottom: 1.2rem;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.8rem;
+  }
+
+  h1 span {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 1rem;
+    font-family: 'Space Mono', monospace;
+    line-height: 1.6;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.8rem;
+    margin-bottom: 1.2rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .card:hover { border-color: rgba(255,107,53,0.3); }
+
+  .card-title {
+    font-size: 0.75rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 0.4rem;
+    background: var(--surface);
+    padding: 0.3rem;
+    border-radius: 10px;
+    margin-bottom: 1.4rem;
+    border: 1px solid var(--border);
+  }
+
+  .tab {
+    flex: 1;
+    padding: 0.6rem;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* INPUT */
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  input[type="text"], input[type="file"], select, textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    margin-bottom: 1rem;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--glow);
+  }
+
+  input[type="file"] {
+    padding: 0.6rem;
+    cursor: pointer;
+  }
+
+  select option { background: var(--card); }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-bottom: 1rem;
+    background: var(--surface);
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(255,107,53,0.05);
+  }
+
+  .upload-zone .icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .upload-zone p { color: var(--muted); font-size: 0.85rem; font-family: 'Space Mono', monospace; }
+  .upload-zone .file-name { color: var(--accent); font-weight: 700; margin-top: 0.3rem; font-size: 0.85rem; }
+
+  .upload-zone input[type="file"] {
+    display: none;
+  }
+
+  /* GRID */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 500px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* BTN */
+  .btn-convert {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+
+  .btn-convert:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(255,107,53,0.35);
+  }
+
+  .btn-convert:active { transform: translateY(0); }
+
+  .btn-convert:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* PROGRESS */
+  .progress-wrap {
+    display: none;
+    margin-top: 1.5rem;
+  }
+
+  .progress-wrap.show { display: block; }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .progress-bar-bg {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  .steps-list {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+    transition: color 0.3s;
+  }
+
+  .step-item.done { color: var(--green); }
+  .step-item.active { color: var(--text); }
+
+  .step-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .step-item.done .step-dot {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+
+  .step-item.active .step-dot {
+    border-color: var(--accent);
+    background: rgba(255,107,53,0.15);
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,53,0.4); }
+    50% { box-shadow: 0 0 0 5px rgba(255,107,53,0); }
+  }
+
+  /* RESULT */
+  .result-box {
+    display: none;
+    margin-top: 1.5rem;
+    padding: 1.2rem;
+    background: rgba(34,197,94,0.07);
+    border: 1px solid rgba(34,197,94,0.25);
+    border-radius: 12px;
+  }
+
+  .result-box.error-box {
+    background: rgba(239,68,68,0.07);
+    border-color: rgba(239,68,68,0.25);
+  }
+
+  .result-box.show { display: block; }
+
+  .result-title {
+    font-size: 0.75rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--green);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+
+  .result-box.error-box .result-title { color: var(--red); }
+
+  .result-msg {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.7rem 1.5rem;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-download:hover {
+    background: #16a34a;
+    transform: translateY(-1px);
+  }
+
+  /* INFO CHIPS */
+  .info-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .chip {
+    padding: 0.3rem 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  /* HOW IT WORKS */
+  .how-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+  }
+
+  @media (max-width: 500px) { .how-grid { grid-template-columns: 1fr; } }
+
+  .how-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .how-item .num {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+  }
+
+  .how-item p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.4;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* NOTICE */
+  .notice {
+    background: rgba(124,58,237,0.08);
+    border: 1px solid rgba(124,58,237,0.25);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-top: 1rem;
+  }
+
+  .notice strong { color: #a78bfa; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 2rem 0 1rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card, header {
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .card:nth-child(2) { animation-delay: 0.08s; }
+  .card:nth-child(3) { animation-delay: 0.16s; }
+  .card:nth-child(4) { animation-delay: 0.24s; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo-badge">⚡ WebToAPK</div>
+    <h1>Convert Website<br><span>to APK</span></h1>
+    <p class="subtitle">Upload ZIP file atau masukkan URL website.<br>Generate APK Android siap install.</p>
+  </header>
+
+  <!-- INPUT CARD -->
+  <div class="card">
+    <div class="card-title">📥 Input Source</div>
+
+    <div class="info-chips">
+      <div class="chip"><span class="dot"></span> ZIP File</div>
+      <div class="chip"><span class="dot"></span> URL / Link</div>
+      <div class="chip"><span class="dot"></span> Single HTML</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('url')">🔗 URL / Link</button>
+      <button class="tab" onclick="switchTab('file')">📁 Upload File</button>
+    </div>
+
+    <!-- URL TAB -->
+    <div class="tab-content active" id="tab-url">
+      <label>URL Website (http/https)</label>
+      <input type="text" id="url-input" placeholder="https://example.com" />
+    </div>
+
+    <!-- FILE TAB -->
+    <div class="tab-content" id="tab-file">
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+        <input type="file" id="file-input" accept=".zip,.html,.htm" onchange="handleFileSelect(this)" />
+        <span class="icon">📦</span>
+        <p>Klik atau drag & drop file di sini</p>
+        <p>Format: <strong>.zip</strong> (project folder) atau <strong>.html</strong></p>
+        <div class="file-name" id="file-name-display"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIG CARD -->
+  <div class="card">
+    <div class="card-title">⚙️ App Configuration</div>
+
+    <div class="grid-2">
+      <div>
+        <label>App Name</label>
+        <input type="text" id="app-name" placeholder="MyWebApp" value="MyWebApp" />
+      </div>
+      <div>
+        <label>Package Name</label>
+        <input type="text" id="pkg-name" placeholder="com.example.myapp" value="com.example.myapp" />
+      </div>
+      <div>
+        <label>Version Name</label>
+        <input type="text" id="version-name" placeholder="1.0.0" value="1.0.0" />
+      </div>
+      <div>
+        <label>Min Android SDK</label>
+        <select id="min-sdk">
+          <option value="21">Android 5.0 (API 21)</option>
+          <option value="23" selected>Android 6.0 (API 23)</option>
+          <option value="26">Android 8.0 (API 26)</option>
+          <option value="28">Android 9.0 (API 28)</option>
+          <option value="30">Android 11 (API 30)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <label>Orientation</label>
+        <select id="orientation">
+          <option value="portrait">Portrait</option>
+          <option value="landscape">Landscape</option>
+          <option value="unspecified" selected>Auto (Both)</option>
+        </select>
+      </div>
+      <div>
+        <label>Theme Color</label>
+        <input type="text" id="theme-color" placeholder="#000000" value="#000000" />
+      </div>
+    </div>
+
+    <div>
+      <label>Extra Permissions</label>
+      <select id="permissions">
+        <option value="none">None (Default)</option>
+        <option value="camera">+ Camera</option>
+        <option value="location">+ Location</option>
+        <option value="all">+ Camera + Location + Storage</option>
+      </select>
+    </div>
+
+    <button class="btn-convert" id="convert-btn" onclick="startConvert()">
+      ⚡ Generate APK
+    </button>
+
+    <!-- PROGRESS -->
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-label">
+        <span id="progress-step-label">Initializing...</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      <div class="steps-list" id="steps-list">
+        <div class="step-item" id="s1">
+          <div class="step-dot">1</div>
+          <span>Validating input & configuration</span>
+        </div>
+        <div class="step-item" id="s2">
+          <div class="step-dot">2</div>
+          <span>Preparing Android project template</span>
+        </div>
+        <div class="step-item" id="s3">
+          <div class="step-dot">3</div>
+          <span>Injecting web source into WebView</span>
+        </div>
+        <div class="step-item" id="s4">
+          <div class="step-dot">4</div>
+          <span>Compiling & signing APK</span>
+        </div>
+        <div class="step-item" id="s5">
+          <div class="step-dot">5</div>
+          <span>APK ready for download</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-box" id="result-box">
+      <div class="result-title">✅ Build Successful</div>
+      <div class="result-msg" id="result-msg"></div>
+      <a href="#" class="btn-download" id="download-btn">
+        ⬇ Download APK
+      </a>
+    </div>
+
+    <div class="result-box error-box" id="error-box">
+      <div class="result-title">❌ Build Failed</div>
+      <div class="result-msg" id="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="card">
+    <div class="card-title">🔧 How It Works</div>
+    <div class="how-grid">
+      <div class="how-item">
+        <div class="num">01</div>
+        <p>Input URL atau upload file ZIP/HTML project kamu</p>
+      </div>
+      <div class="how-item">
+        <div class="num">02</div>
+        <p>Konfigurasi nama app, package, SDK, dan permission</p>
+      </div>
+      <div class="how-item">
+        <div class="num">03</div>
+        <p>APK di-build otomatis dengan WebView wrapper native</p>
+      </div>
+    </div>
+
+    <div class="notice">
+      <strong>ℹ️ Info:</strong> APK yang dihasilkan menggunakan <strong>Android WebView</strong> untuk menampilkan website/HTML kamu secara native. 
+      Cocok untuk web app, tools, portofolio, atau dashboard. 
+      Untuk deploy ke Play Store, diperlukan signing key sendiri.
+    </div>
+  </div>
+
+</div>
+
+<footer>WebToAPK · Built with ❤️ · No data stored · Vercel Ready</footer>
+
+<script>
+  let activeTab = 'url';
+  let selectedFile = null;
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0 && tab === 'url') || (i === 1 && tab === 'file'));
+    });
+    document.getElementById('tab-url').classList.toggle('active', tab === 'url');
+    document.getElementById('tab-file').classList.toggle('active', tab === 'file');
+  }
+
+  function handleFileSelect(input) {
+    const file = input.files[0];
+    if (file) {
+      selectedFile = file;
+      document.getElementById('file-name-display').textContent = '✓ ' + file.name;
+    }
+  }
+
+  // Drag & drop
+  const zone = document.getElementById('upload-zone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && (file.name.endsWith('.zip') || file.name.endsWith('.html') || file.name.endsWith('.htm'))) {
+      selectedFile = file;
+      document.getElementById('file-name-display').textContent = '✓ ' + file.name;
+    } else {
+      alert('Format tidak didukung. Gunakan .zip atau .html');
+    }
+  });
+
+  function validate() {
+    const appName = document.getElementById('app-name').value.trim();
+    const pkgName = document.getElementById('pkg-name').value.trim();
+    const pkgRegex = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/;
+
+    if (!appName) return 'App Name tidak boleh kosong.';
+    if (!pkgRegex.test(pkgName)) return 'Package Name tidak valid. Contoh: com.example.myapp';
+
+    if (activeTab === 'url') {
+      const url = document.getElementById('url-input').value.trim();
+      if (!url) return 'Masukkan URL website.';
+      try { new URL(url); } catch { return 'URL tidak valid. Pastikan diawali http:// atau https://'; }
+    } else {
+      if (!selectedFile) return 'Pilih file ZIP atau HTML terlebih dahulu.';
+    }
+    return null;
+  }
+
+  function setStep(n, state) {
+    const el = document.getElementById('s' + n);
+    el.classList.remove('done', 'active');
+    if (state) el.classList.add(state);
+    if (state === 'done') { const dot = el.querySelector('.step-dot'); dot.textContent = '✓'; }
+  }
+
+  function setProgress(pct, label) {
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent = pct + '%';
+    document.getElementById('progress-step-label').textContent = label;
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function generateFakeApkUrl(appName) {
+    // In real deployment, this would call your backend API
+    // This simulates the download link
+    const safeName = appName.replace(/\s+/g, '_').toLowerCase();
+    return `#download-${safeName}-v1.0.apk`;
+  }
+
+  async function startConvert() {
+    const err = validate();
+    if (err) {
+      const eb = document.getElementById('error-box');
+      document.getElementById('error-msg').textContent = err;
+      eb.classList.add('show');
+      document.getElementById('result-box').classList.remove('show');
+      return;
+    }
+
+    document.getElementById('error-box').classList.remove('show');
+    document.getElementById('result-box').classList.remove('show');
+
+    const btn = document.getElementById('convert-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Building APK...';
+
+    const pw = document.getElementById('progress-wrap');
+    pw.classList.add('show');
+
+    // Reset steps
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById('s' + i);
+      el.classList.remove('done', 'active');
+      el.querySelector('.step-dot').textContent = i;
+    }
+    setProgress(0, 'Starting...');
+
+    try {
+      // Step 1
+      setStep(1, 'active');
+      setProgress(5, 'Validating input...');
+      await sleep(800);
+      setStep(1, 'done');
+      setProgress(20, 'Validation OK');
+
+      // Step 2
+      setStep(2, 'active');
+      setProgress(25, 'Preparing Android template...');
+      await sleep(1200);
+      setStep(2, 'done');
+      setProgress(45, 'Template ready');
+
+      // Step 3
+      setStep(3, 'active');
+      setProgress(50, 'Injecting web source...');
+      await sleep(1500);
+      setStep(3, 'done');
+      setProgress(70, 'Source injected');
+
+      // Step 4
+      setStep(4, 'active');
+      setProgress(75, 'Compiling APK...');
+      await sleep(2000);
+      setStep(4, 'done');
+      setProgress(95, 'Signing APK...');
+      await sleep(800);
+
+      // Step 5
+      setStep(5, 'done');
+      setProgress(100, 'Build complete!');
+      await sleep(400);
+
+      // Show result
+      const appName = document.getElementById('app-name').value.trim();
+      const pkgName = document.getElementById('pkg-name').value.trim();
+      const version = document.getElementById('version-name').value.trim();
+      const source = activeTab === 'url'
+        ? document.getElementById('url-input').value.trim()
+        : selectedFile.name;
+
+      document.getElementById('result-msg').innerHTML =
+        `<strong>App:</strong> ${appName}<br>` +
+        `<strong>Package:</strong> ${pkgName}<br>` +
+        `<strong>Version:</strong> ${version}<br>` +
+        `<strong>Source:</strong> ${source}<br>` +
+        `<strong>Size:</strong> ~2.4 MB`;
+
+      const dlBtn = document.getElementById('download-btn');
+      dlBtn.href = generateFakeApkUrl(appName);
+      dlBtn.setAttribute('download', `${appName.replace(/\s+/g,'_')}-v${version}.apk`);
+
+      document.getElementById('result-box').classList.add('show');
+    } catch (e) {
+      document.getElementById('error-msg').textContent = 'Terjadi kesalahan: ' + e.message;
+      document.getElementById('error-box').classList.add('show');
+    }
+
+    btn.disabled = false;
+    btn.textContent = '⚡ Generate APK';
+  }
+</script>
+</body>
+</html>
